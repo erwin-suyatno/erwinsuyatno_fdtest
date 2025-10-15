@@ -137,3 +137,39 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VSCode
+.vscode/
+.history/
+
+# JetBrains
+.idea/
+*.iml
+
+# Logs (frontend build)
+frontend/.next/
+frontend/out/
+
+# Build outputs
+backend/dist/
+backend/build/
+frontend/.turbo/
+
+# Local databases and data
+postgres-data/
+redis-data/
+
+# Swagger generated files
+backend/swagger.json.local
+
+# Coverage and reports (monorepo root)
+coverage/
+
+# Env files in subfolders (keep examples tracked)
+backend/.env
+frontend/.env
