@@ -63,12 +63,8 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
   
-  // Enable PWA features
-  pwa: {
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
-  },
+  // PWA features removed - Next.js doesn't have built-in PWA support
+  // To add PWA, install next-pwa package and configure properly
   
   // Performance optimizations
   poweredByHeader: false,
