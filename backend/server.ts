@@ -8,6 +8,7 @@ import authRoutes from './src/routes/auth';
 import userRoutes from './src/routes/users';
 import homeRoutes from './src/routes/home';
 import bookRoutes from './src/routes/books';
+import bookingRoutes from './src/routes/bookings';
 import publicRoutes from './src/routes/public';
 import swaggerUi from 'swagger-ui-express';
 import swaggerDoc from './swagger.json' with { type: 'json' };
@@ -79,6 +80,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/books', bookRoutes);
+app.use('/api/bookings', bookingRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
