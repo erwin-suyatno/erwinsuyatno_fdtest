@@ -6,6 +6,7 @@ export async function getPublicBooks(req: Request, res: Response) {
     const author = typeof req.query.author === 'string' ? req.query.author : undefined;
     const rating = typeof req.query.rating === 'string' ? parseInt(req.query.rating) : undefined;
     const search = typeof req.query.search === 'string' ? req.query.search : undefined;
+    const isAvailable = typeof req.query.isAvailable === 'string' ? req.query.isAvailable === 'true' : undefined;
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page) : undefined;
     const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit) : undefined;
 
@@ -13,6 +14,7 @@ export async function getPublicBooks(req: Request, res: Response) {
       author,
       rating,
       search,
+      isAvailable,
       page,
       limit,
     });
