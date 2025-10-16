@@ -98,6 +98,13 @@ export default function Navigation({ user }: NavigationProps) {
             </div>
             
             <button
+              onClick={() => router.push('/profile')}
+              className="btn btn-secondary text-sm"
+            >
+              👤 Profile
+            </button>
+            
+            <button
               onClick={handleLogout}
               className="btn btn-secondary text-sm"
             >
@@ -136,6 +143,21 @@ export default function Navigation({ user }: NavigationProps) {
                   {item.label}
                 </button>
               ))}
+              
+              <div className="border-t border-gray-200 my-2"></div>
+              <button
+                onClick={() => {
+                  router.push('/profile');
+                  setIsMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/profile')
+                    ? 'bg-green-100 text-green-800'
+                    : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
+                }`}
+              >
+                👤 Profile
+              </button>
               
               {user.role === 'ADMIN' && (
                 <>

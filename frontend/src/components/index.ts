@@ -21,6 +21,10 @@ export { default as BookForm } from './forms/BookForm';
 export { default as UserForm } from './forms/UserForm';
 export { default as BookingForm } from './forms/BookingForm';
 
+// Password Management Components
+export { default as PasswordStrength } from './PasswordStrength';
+export { default as ChangePasswordModal } from './ChangePasswordModal';
+
 // Existing Components
 export { default as LazyLoadingSpinner } from './LazyLoadingSpinner';
 export { default as LoadingSpinner } from './LoadingSpinner';

@@ -113,13 +113,23 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="text-center">
-            <button
-              onClick={() => router.push('/')}
-              className="text-sm text-green-600 hover:text-green-500"
-            >
-              🏡 Back to Home
-            </button>
+          <div className="text-center space-y-2">
+            <div>
+              <button
+                onClick={() => router.push('/forgot-password')}
+                className="text-sm text-green-600 hover:text-green-500"
+              >
+                🔑 Forgot your password?
+              </button>
+            </div>
+            <div>
+              <button
+                onClick={() => router.push('/')}
+                className="text-sm text-green-600 hover:text-green-500"
+              >
+                🏡 Back to Home
+              </button>
+            </div>
           </div>
         </form>
       </div>

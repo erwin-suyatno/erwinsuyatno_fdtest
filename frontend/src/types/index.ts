@@ -110,3 +110,32 @@ export interface UpdateUserData {
   role?: string;
   isVerified?: boolean;
 }
+
+// Auth-related types
+export interface ForgotPasswordData {
+  email: string;
+}
+
+export interface ResetPasswordData {
+  token: string;
+  password: string;
+}
+
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface PasswordStrength {
+  isValid: boolean;
+  score: number;
+  feedback: string[];
+}
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  isVerified: boolean;
+  role: string;
+}
