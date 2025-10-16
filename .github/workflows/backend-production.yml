@@ -1,0 +1,28 @@
+name: production-deploy-backend
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+    paths:
+      - "backend/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - run: cd backend && docker build -t backend-erwinsuyatno-fdtest-prod -f Dockerfile.production .
+      - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - run: docker push backend-erwinsuyatno-fdtest-prod
