@@ -21,6 +21,7 @@ export async function listBooksService(params?: {
   rating?: number; 
   search?: string; 
   uploadedById?: string;
+  isAvailable?: boolean;
   page?: number;
   limit?: number;
 }) {

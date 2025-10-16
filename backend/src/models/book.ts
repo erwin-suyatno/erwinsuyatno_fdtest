@@ -22,7 +22,7 @@ export const updateBookSchema = z.object({
 export type CreateBookInput = z.infer<typeof createBookSchema>;
 export type UpdateBookInput = z.infer<typeof updateBookSchema>;
 
-export type PublicBook = Pick<Book, 'id' | 'title' | 'author' | 'description' | 'thumbnailUrl' | 'rating' | 'uploadedById' | 'createdAt' | 'updatedAt'>;
+export type PublicBook = Pick<Book, 'id' | 'title' | 'author' | 'description' | 'thumbnailUrl' | 'rating' | 'uploadedById' | 'isAvailable' | 'createdAt' | 'updatedAt'>;
 
 export async function createBook(input: CreateBookInput): Promise<PublicBook> {
   const data = createBookSchema.parse(input);
@@ -43,6 +43,7 @@ export async function createBook(input: CreateBookInput): Promise<PublicBook> {
       thumbnailUrl: true, 
       rating: true, 
       uploadedById: true, 
+      isAvailable: true,
       createdAt: true, 
       updatedAt: true 
     },
@@ -61,6 +62,7 @@ export async function findBookById(id: string): Promise<PublicBook | null> {
       thumbnailUrl: true, 
       rating: true, 
       uploadedById: true, 
+      isAvailable: true,
       createdAt: true, 
       updatedAt: true 
     } 
@@ -72,6 +74,7 @@ export async function listBooks(params?: {
   rating?: number; 
   search?: string; 
   uploadedById?: string;
+  isAvailable?: boolean;
   page?: number;
   limit?: number;
 }): Promise<{ books: PublicBook[]; total: number; page: number; totalPages: number }> {
@@ -83,6 +86,7 @@ export async function listBooks(params?: {
     ...(params?.author ? { author: { contains: params.author, mode: 'insensitive' as const } } : {}),
     ...(params?.rating ? { rating: params.rating } : {}),
     ...(params?.uploadedById ? { uploadedById: params.uploadedById } : {}),
+    ...(params?.isAvailable !== undefined ? { isAvailable: params.isAvailable } : {}),
     ...(params?.search
       ? {
           OR: [
@@ -108,6 +112,7 @@ export async function listBooks(params?: {
         thumbnailUrl: true, 
         rating: true, 
         uploadedById: true, 
+        isAvailable: true,
         createdAt: true, 
         updatedAt: true 
       },
@@ -137,6 +142,7 @@ export async function updateBook(id: string, input: UpdateBookInput): Promise<Pu
       thumbnailUrl: true, 
       rating: true, 
       uploadedById: true, 
+      isAvailable: true,
       createdAt: true, 
       updatedAt: true 
     },
