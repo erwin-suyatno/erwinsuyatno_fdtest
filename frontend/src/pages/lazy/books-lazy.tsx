@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react';
-import LazyLoadingSpinner from '../components/LazyLoadingSpinner';
+import LazyLoadingSpinner from '../../components/LazyLoadingSpinner';
 
 // Lazy load the BooksPage component
-const BooksPage = lazy(() => import('./books'));
+const BooksPage = lazy(() => import('../books'));
 
 export default function LazyBooksPage() {
   return (

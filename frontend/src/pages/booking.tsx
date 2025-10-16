@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import { Book, Booking, CreateBookingData } from '../types';
 import { bookingService } from '../services/bookingService';
 import { useAuth } from '../middleware/auth';
+import { useBooks } from '../hooks/useBooks';
+import { useBookings } from '../hooks/useBookings';
 import { 
   PageContainer, 
   BookCard, 
@@ -10,24 +12,49 @@ import {
   ErrorState, 
   EmptyState,
   Modal,
-  BookingForm
+  BookingForm,
+  BookingList,
+  FilterSection,
+  Pagination
 } from '../components';
 
 export default function BookingPage() {
   const [activeTab, setActiveTab] = useState<'browse' | 'my-bookings'>('browse');
-  const [books, setBooks] = useState<Book[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [bookingForm, setBookingForm] = useState({
-    borrowDate: '',
-    returnDate: ''
-  });
   const router = useRouter();
   const { user, loading: authLoading, isAdmin } = useAuth();
+  
+  // Use bookStore for available books
+  const {
+    books,
+    loading: booksLoading,
+    error: booksError,
+    currentPage,
+    totalPages,
+    total,
+    filters,
+    handleSearch,
+    handleAuthorFilter,
+    handleRatingFilter,
+    clearFilters,
+    handlePageChange,
+    handlePreviousPage,
+    handleNextPage,
+    fetchAvailableBooks,
+    reset: resetBooks,
+  } = useBooks();
+
+  // Use bookingStore for user bookings
+  const {
+    bookings,
+    loading: bookingsLoading,
+    error: bookingsError,
+    fetchMyBookings,
+    returnBooking,
+    cancelBooking,
+    reset: resetBookings,
+  } = useBookings();
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -37,7 +64,12 @@ export default function BookingPage() {
         fetchMyBookings();
       }
     }
-  }, [activeTab, user, authLoading]);
+    
+    return () => {
+      resetBooks();
+      resetBookings();
+    };
+  }, [activeTab, user, authLoading, fetchAvailableBooks, fetchMyBookings, resetBooks, resetBookings]);
 
   // Show loading while checking auth
   if (authLoading) {
@@ -60,82 +92,16 @@ export default function BookingPage() {
   // Allow all authenticated users (ADMIN, USER, MEMBER) to access booking page
   // No redirect needed - admins can also borrow books
 
-  const fetchAvailableBooks = async () => {
-    try {
-      setLoading(true);
-      const response = await bookingService.getAvailableBooks();
-      setBooks(response.books);
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        router.push('/login');
-      } else {
-        setError('Failed to load available books');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMyBookings = async () => {
-    try {
-      setLoading(true);
-      const response = await bookingService.getMyBookings();
-      setBookings(response.bookings);
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        router.push('/login');
-      } else {
-        setError('Failed to load your bookings');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      fetchAvailableBooks();
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await bookingService.searchAvailableBooks(searchQuery);
-      setBooks(response.books);
-    } catch (err: any) {
-      setError('Failed to search books');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleBookClick = (book: Book) => {
     setSelectedBook(book);
     setShowBookingModal(true);
-    // Set default dates (today and 7 days from now)
-    const today = new Date().toISOString().split('T')[0];
-    const returnDate = new Date();
-    returnDate.setDate(returnDate.getDate() + 7);
-    setBookingForm({
-      borrowDate: today,
-      returnDate: returnDate.toISOString().split('T')[0]
-    });
   };
 
-  const handleBookingSubmit = async () => {
-    if (!selectedBook) return;
-
+  const handleBookingSubmit = async (bookingData: CreateBookingData) => {
     try {
-      setLoading(true);
-      await bookingService.createBooking({
-        bookId: selectedBook.id,
-        borrowDate: bookingForm.borrowDate,
-        returnDate: bookingForm.returnDate
-      });
-      
+      await bookingService.createBooking(bookingData);
       setShowBookingModal(false);
       setSelectedBook(null);
-      setBookingForm({ borrowDate: '', returnDate: '' });
       
       // Refresh the current tab
       if (activeTab === 'browse') {
@@ -144,40 +110,30 @@ export default function BookingPage() {
         fetchMyBookings();
       }
     } catch (err: any) {
-      setError('Failed to create booking');
-    } finally {
-      setLoading(false);
+      console.error('Failed to create booking:', err);
+      // Show error message to user
+      alert(`Failed to create booking: ${err.response?.data?.error || err.message || 'Unknown error'}`);
     }
   };
 
   const handleCancelBooking = async (bookingId: string) => {
     try {
-      await bookingService.cancelBooking(bookingId);
-      fetchMyBookings();
+      await cancelBooking(bookingId);
     } catch (err: any) {
-      setError('Failed to cancel booking');
+      console.error('Failed to cancel booking:', err);
+      alert(`Failed to cancel booking: ${err.response?.data?.error || err.message || 'Unknown error'}`);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'returned': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const handleReturnBooking = async (bookingId: string) => {
+    try {
+      await returnBooking(bookingId);
+    } catch (err: any) {
+      console.error('Failed to return booking:', err);
+      alert(`Failed to return booking: ${err.response?.data?.error || err.message || 'Unknown error'}`);
     }
   };
 
-  const getStatusEmoji = (status: string) => {
-    switch (status) {
-      case 'pending': return '⏳';
-      case 'approved': return '✅';
-      case 'rejected': return '❌';
-      case 'returned': return '📚';
-      default: return '❓';
-    }
-  };
 
   return (
     <PageContainer>
@@ -221,50 +177,86 @@ export default function BookingPage() {
             </div>
           </div>
 
-          {/* Search (only for browse tab) */}
+          {/* Filters (only for browse tab) */}
           {activeTab === 'browse' && (
             <div className="px-6 py-4 bg-green-50 border-b border-green-200">
-              <div className="flex space-x-4">
-                <input
-                  type="text"
-                  placeholder="🔍 Search for books..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 input"
-                />
-                <button
-                  onClick={handleSearch}
-                  className="btn btn-primary"
-                >
-                  🔍 Search
-                </button>
-              </div>
+              <FilterSection
+                title="Filter Available Books"
+                onClear={clearFilters}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-green-700 mb-1">
+                      🔍 Search Books
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Search by title or author..."
+                      value={filters.search || ''}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-green-700 mb-1">
+                      ✍️ Filter by Author
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter author name..."
+                      value={filters.author || ''}
+                      onChange={(e) => handleAuthorFilter(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-green-700 mb-1">
+                      ⭐ Filter by Rating
+                    </label>
+                    <select
+                      value={filters.rating || ''}
+                      onChange={(e) => handleRatingFilter(e.target.value)}
+                      className="input"
+                    >
+                      <option value="">All Ratings</option>
+                      <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                      <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                      <option value="3">⭐⭐⭐ 3 Stars</option>
+                      <option value="2">⭐⭐ 2 Stars</option>
+                      <option value="1">⭐ 1 Star</option>
+                    </select>
+                  </div>
+                </div>
+              </FilterSection>
             </div>
           )}
 
           {/* Content */}
           <div className="p-6">
-            {loading ? (
-              <LoadingState />
-            ) : error ? (
-              <ErrorState 
-                message={error}
-                onRetry={() => activeTab === 'browse' ? fetchAvailableBooks() : fetchMyBookings()}
-              />
-            ) : activeTab === 'browse' ? (
+            {activeTab === 'browse' ? (
               <>
-                {books.length === 0 ? (
+                {booksLoading ? (
+                  <LoadingState message="🌿 Loading available books..." />
+                ) : booksError ? (
+                  <ErrorState 
+                    message={booksError}
+                    onRetry={() => fetchAvailableBooks()}
+                  />
+                ) : books.length === 0 ? (
                   <EmptyState 
                     icon="📚"
                     title="No books available"
-                    description="Try searching for different books"
+                    description="Try adjusting your search criteria or check back later"
                   />
                 ) : (
                   <>
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-green-800">
-                        📚 {books.length} Book{books.length !== 1 ? 's' : ''} Available for Borrowing
+                        📚 {total} Book{total !== 1 ? 's' : ''} Available for Borrowing
                       </h3>
+                      <p className="text-sm text-gray-500">
+                        Showing {books.length} of {total} books
+                      </p>
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -272,17 +264,40 @@ export default function BookingPage() {
                         <BookCard
                           key={book.id}
                           book={book}
-                          onBorrow={handleBookClick}
-                          actionText="📖 Borrow This Book"
+                          onBook={handleBookClick}
+                          showBookingButton={true}
                         />
                       ))}
                     </div>
+
+                    {totalPages > 1 && (
+                      <div className="mt-8">
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          total={total}
+                          itemsPerPage={5}
+                          itemsOnCurrentPage={books.length}
+                          loading={booksLoading}
+                          onPageChange={handlePageChange}
+                          onPreviousPage={handlePreviousPage}
+                          onNextPage={handleNextPage}
+                        />
+                      </div>
+                    )}
                   </>
                 )}
               </>
             ) : (
               <>
-                {bookings.length === 0 ? (
+                {bookingsLoading ? (
+                  <LoadingState message="📋 Loading your bookings..." />
+                ) : bookingsError ? (
+                  <ErrorState 
+                    message={bookingsError}
+                    onRetry={() => fetchMyBookings()}
+                  />
+                ) : bookings.length === 0 ? (
                   <EmptyState 
                     icon="📋"
                     title="No bookings yet"
@@ -298,39 +313,13 @@ export default function BookingPage() {
                       </h3>
                     </div>
                     
-                    <div className="space-y-4">
-                      {bookings.map((booking) => (
-                        <div key={booking.id} className="card">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                                {booking.book?.title || 'Unknown Book'}
-                              </h4>
-                              <p className="text-sm text-gray-600 mb-2">
-                                by {booking.book?.author || 'Unknown Author'}
-                              </p>
-                              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                <span>📅 Borrow: {new Date(booking.borrowDate).toLocaleDateString()}</span>
-                                <span>📅 Return: {new Date(booking.returnDate).toLocaleDateString()}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                {getStatusEmoji(booking.status)} {booking.status.toUpperCase()}
-                              </span>
-                              {booking.status === 'pending' && (
-                                <button
-                                  onClick={() => handleCancelBooking(booking.id)}
-                                  className="btn btn-danger text-sm"
-                                >
-                                  Cancel
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <BookingList
+                      bookings={bookings}
+                      loading={bookingsLoading}
+                      error={bookingsError}
+                      onReturn={handleReturnBooking}
+                      onCancel={handleCancelBooking}
+                    />
                   </>
                 )}
               </>
@@ -342,7 +331,7 @@ export default function BookingPage() {
         <Modal
           isOpen={showBookingModal}
           onClose={() => setShowBookingModal(false)}
-          title={`📖 Borrow "${selectedBook?.title || ''}"`}
+          title="📚 Book This Book"
         >
           {selectedBook && (
             <BookingForm

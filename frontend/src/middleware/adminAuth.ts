@@ -30,7 +30,7 @@ export function useAdminAuth() {
       // Decode token to get user info (simple JWT decode)
       const payload = JSON.parse(atob(token.split('.')[1]));
       const currentUser: User = {
-        id: payload.id,
+        id: payload.userId || payload.id,
         name: payload.name,
         email: payload.email,
         role: payload.role,

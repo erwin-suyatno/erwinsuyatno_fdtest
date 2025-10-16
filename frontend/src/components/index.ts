@@ -1,10 +1,13 @@
 // Layout Components
 export { default as Header } from './layout/Header';
+export { default as Navigation } from './layout/Navigation';
 export { default as BackgroundElements } from './layout/BackgroundElements';
 export { default as PageContainer } from './layout/PageContainer';
 
 // UI Components
 export { default as BookCard } from './ui/BookCard';
+export { default as BookingCard } from './ui/BookingCard';
+export { default as BookingList } from './ui/BookingList';
 export { default as Pagination } from './ui/Pagination';
 export { default as Modal } from './ui/Modal';
 export { default as ConfirmDialog } from './ui/ConfirmDialog';
@@ -22,4 +25,4 @@ export { default as BookingForm } from './forms/BookingForm';
 export { default as LazyLoadingSpinner } from './LazyLoadingSpinner';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as PerformanceMonitor } from './PerformanceMonitor';
-export { default as withLazyLoading } from './withLazyLoading';
+export { withLazyLoading, withBooksLazyLoading, withUsersLazyLoading, withBookingLazyLoading, withHomeLazyLoading } from './withLazyLoading';

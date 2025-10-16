@@ -1,9 +1,9 @@
-import { useBookStore } from '../stores/bookStore';
-import { BookFilters } from '../types';
+import { useBookingStore } from '../stores/bookingStore';
+import { BookingFilters } from '../types';
 
-export const useBooks = () => {
+export const useBookings = () => {
   const {
-    books,
+    bookings,
     loading,
     error,
     currentPage,
@@ -13,15 +13,20 @@ export const useBooks = () => {
     filters,
     setFilters,
     goToPage,
-    fetchBooks,
-    fetchAvailableBooks,
+    fetchMyBookings,
+    fetchAllBookings,
+    createBooking,
+    approveBooking,
+    rejectBooking,
+    returnBooking,
+    cancelBooking,
     reset,
-  } = useBookStore();
+  } = useBookingStore();
 
-  const handleFilterChange = (key: keyof BookFilters, value: string | number) => {
+  const handleFilterChange = (key: keyof BookingFilters, value: string) => {
     const newFilters = { ...filters, [key]: value, page: 1 };
     setFilters(newFilters);
-    fetchBooks(true); // Reset and fetch with new filters
+    fetchMyBookings(true); // Reset and fetch with new filters
   };
 
   const handlePageChange = async (page: number) => {
@@ -42,33 +47,23 @@ export const useBooks = () => {
     }
   };
 
-  const handleSearch = (searchTerm: string) => {
-    handleFilterChange('search', searchTerm);
-  };
-
-  const handleAuthorFilter = (author: string) => {
-    handleFilterChange('author', author);
-  };
-
-  const handleRatingFilter = (rating: string) => {
-    handleFilterChange('rating', rating);
+  const handleStatusFilter = (status: string) => {
+    handleFilterChange('status', status);
   };
 
   const clearFilters = () => {
-    const clearedFilters: BookFilters = {
-      author: '',
-      rating: '',
-      search: '',
+    const clearedFilters: BookingFilters = {
+      status: '',
       page: 1,
-      limit: 5,
+      limit: 10,
     };
     setFilters(clearedFilters);
-    fetchBooks(true);
+    fetchMyBookings(true);
   };
 
   return {
     // Data
-    books,
+    bookings,
     loading,
     error,
     
@@ -86,12 +81,15 @@ export const useBooks = () => {
     handlePageChange,
     handlePreviousPage,
     handleNextPage,
-    handleSearch,
-    handleAuthorFilter,
-    handleRatingFilter,
+    handleStatusFilter,
     clearFilters,
-    fetchBooks,
-    fetchAvailableBooks,
+    fetchMyBookings,
+    fetchAllBookings,
+    createBooking,
+    approveBooking,
+    rejectBooking,
+    returnBooking,
+    cancelBooking,
     reset,
   };
 };

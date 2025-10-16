@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react';
-import LazyLoadingSpinner from '../components/LazyLoadingSpinner';
+import LazyLoadingSpinner from '../../components/LazyLoadingSpinner';
 
 // Lazy load the UsersPage component
-const UsersPage = lazy(() => import('./users'));
+const UsersPage = lazy(() => import('../users'));
 
 export default function LazyUsersPage() {
   return (

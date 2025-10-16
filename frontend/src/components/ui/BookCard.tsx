@@ -6,6 +6,8 @@ interface BookCardProps {
   onEdit?: (book: Book) => void;
   onDelete?: (bookId: string) => void;
   onBorrow?: (book: Book) => void;
+  onBook?: (book: Book) => void;
+  showBookingButton?: boolean;
   actionText?: string;
 }
 
@@ -15,6 +17,8 @@ export default function BookCard({
   onEdit, 
   onDelete, 
   onBorrow,
+  onBook,
+  showBookingButton = false,
   actionText = "📖 Borrow This Book"
 }: BookCardProps) {
   return (
@@ -55,8 +59,17 @@ export default function BookCard({
         </p>
       )}
       
-      <div className="text-xs text-gray-500 mb-4">
-        Added {new Date(book.createdAt).toLocaleDateString()}
+      <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
+        <span>Added {new Date(book.createdAt).toLocaleDateString()}</span>
+        {showBookingButton && (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            book.isAvailable 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {book.isAvailable ? '✅ Available' : '❌ Unavailable'}
+          </span>
+        )}
       </div>
 
       {showActions && onEdit && onDelete && (
@@ -82,6 +95,20 @@ export default function BookCard({
           className="btn btn-primary w-full"
         >
           {actionText}
+        </button>
+      )}
+
+      {showBookingButton && onBook && (
+        <button 
+          onClick={() => onBook(book)}
+          disabled={!book.isAvailable}
+          className={`btn w-full ${
+            book.isAvailable 
+              ? 'btn-primary' 
+              : 'btn-secondary cursor-not-allowed opacity-50'
+          }`}
+        >
+          {book.isAvailable ? '📚 Book This Book' : '❌ Not Available'}
         </button>
       )}
     </div>

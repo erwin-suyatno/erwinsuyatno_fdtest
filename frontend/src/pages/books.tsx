@@ -4,6 +4,7 @@ import { Book, CreateBookData, UpdateBookData } from '../types';
 import { useAdminAuth } from '../middleware/adminAuth';
 import { bookService } from '../services/bookService';
 import { useBooks } from '../hooks/useBooks';
+import { useBookings } from '../hooks/useBookings';
 import { 
   PageContainer, 
   BookCard, 
@@ -16,9 +17,12 @@ import {
   BookForm,
   ConfirmDialog
 } from '../components';
+import BookingForm from '../components/forms/BookingForm';
 
 export default function BooksPage() {
   const [showBookModal, setShowBookModal] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingBook, setBookingBook] = useState<Book | null>(null);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [bookForm, setBookForm] = useState<CreateBookData>({
     title: '',
@@ -48,6 +52,8 @@ export default function BooksPage() {
     handleNextPage,
     fetchBooks,
   } = useBooks();
+
+  const { createBooking } = useBookings();
 
   useEffect(() => {
     if (isAdmin && !authLoading) {
@@ -119,6 +125,28 @@ export default function BooksPage() {
 
   const handleDeleteBook = (bookId: string) => {
     setDeleteConfirm(bookId);
+  };
+
+  const handleBookBooking = (book: Book) => {
+    if (!book.isAvailable) {
+      alert('This book is not available for booking');
+      return;
+    }
+    setBookingBook(book);
+    setShowBookingModal(true);
+  };
+
+  const handleBookingSubmit = async (bookingData: { bookId: string; borrowDate: string; returnDate: string }) => {
+    try {
+      await createBooking(bookingData);
+      setShowBookingModal(false);
+      setBookingBook(null);
+      // Show success message
+      alert('Booking request submitted successfully!');
+    } catch (err: any) {
+      console.error('Failed to create booking:', err);
+      alert('Failed to create booking. Please try again.');
+    }
   };
 
   const confirmDelete = async () => {
@@ -258,9 +286,11 @@ export default function BooksPage() {
                     <BookCard
                       key={book.id}
                       book={book}
-                      showActions={true}
-                      onEdit={handleEditBook}
-                      onDelete={handleDeleteBook}
+                      showActions={isAdmin}
+                      onEdit={isAdmin ? handleEditBook : undefined}
+                      onDelete={isAdmin ? handleDeleteBook : undefined}
+                      onBook={!isAdmin ? handleBookBooking : undefined}
+                      showBookingButton={!isAdmin}
                     />
                   ))}
                 </div>
@@ -316,6 +346,21 @@ export default function BooksPage() {
           cancelText="Cancel"
           confirmButtonClass="btn btn-danger"
         />
+
+        {/* Booking Modal */}
+        <Modal
+          isOpen={showBookingModal}
+          onClose={() => setShowBookingModal(false)}
+          title="📚 Book This Book"
+        >
+          {bookingBook && (
+            <BookingForm
+              book={bookingBook}
+              onSubmit={handleBookingSubmit}
+              onCancel={() => setShowBookingModal(false)}
+            />
+          )}
+        </Modal>
       </PageContainer>
   );
 }

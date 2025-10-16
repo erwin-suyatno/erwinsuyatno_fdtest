@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { apiClient } from '../lib/api/client';
 import { useAuth } from '../middleware/auth';
-import { PageContainer, LoadingState, ErrorState } from '../components';
+import { PageContainer, LoadingState, ErrorState, Navigation } from '../components';
 
 interface HomeData {
   name: string;
@@ -56,7 +56,9 @@ export default function HomePage() {
   }
 
   return (
-    <PageContainer>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation user={user} />
+      <PageContainer>
         {/* Welcome Header with Gradient */}
         <div className="text-center mb-12">
           <div className="inline-block">
@@ -274,5 +276,6 @@ export default function HomePage() {
           </div>
         )}
       </PageContainer>
+    </div>
   );
 }

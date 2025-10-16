@@ -25,6 +25,7 @@ interface BookState {
   setFilters: (filters: BookFilters) => void;
   goToPage: (page: number) => Promise<void>;
   fetchBooks: (reset?: boolean) => Promise<void>;
+  fetchAvailableBooks: (reset?: boolean) => Promise<void>;
   reset: () => void;
 }
 
@@ -154,6 +155,59 @@ export const useBookStore = create<BookState>((set, get) => ({
       set({ 
         loading: false, 
         error: 'Failed to load books',
+        books: [],
+      });
+    }
+  },
+
+  fetchAvailableBooks: async (reset = false) => {
+    const { filters } = get();
+    
+    if (reset) {
+      set({ 
+        books: [], 
+        currentPage: 1, 
+        totalPages: 0, 
+        total: 0
+      });
+    }
+    
+    set({ loading: true, error: null });
+    
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters.author) params.append('author', filters.author);
+      if (filters.rating) params.append('rating', filters.rating.toString());
+      if (filters.search) params.append('search', filters.search);
+      params.append('isAvailable', 'true'); // Only fetch available books
+      params.append('page', (filters.page || 1).toString());
+      params.append('limit', (filters.limit || 5).toString());
+      
+      const url = `/public/books?${params.toString()}`;
+      const response = await apiClient.get(url);
+      
+      const books = response.data.books;
+      const pagination = {
+        page: response.data.page,
+        totalPages: response.data.totalPages,
+        total: response.data.total,
+      };
+      
+      set({
+        books: books,
+        loading: false,
+        error: null,
+        currentPage: pagination.page,
+        totalPages: pagination.totalPages,
+        total: pagination.total,
+      });
+      
+    } catch (err: any) {
+      console.error('Error fetching available books:', err);
+      set({ 
+        loading: false, 
+        error: 'Failed to load available books',
         books: [],
       });
     }

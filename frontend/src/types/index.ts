@@ -16,6 +16,7 @@ export interface Book {
   thumbnailUrl?: string;
   rating?: number;
   uploadedById?: string;
+  isAvailable?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,9 +57,11 @@ export interface Booking {
   id: string;
   bookId: string;
   userId: string;
-  status: 'pending' | 'approved' | 'rejected' | 'returned';
+  status: 'pending' | 'approved' | 'rejected' | 'returned' | 'overdue';
   borrowDate: string;
   returnDate: string;
+  actualReturnDate?: string;
+  overdueFee?: number;
   createdAt: string;
   updatedAt: string;
   book?: Book;
@@ -91,4 +94,19 @@ export interface PublicFilters {
   search?: string;
   page?: number;
   limit?: number;
+}
+
+export interface BookingFilters {
+  status?: string;
+  userId?: string;
+  bookId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface UpdateUserData {
+  name?: string;
+  email?: string;
+  role?: string;
+  isVerified?: boolean;
 }
