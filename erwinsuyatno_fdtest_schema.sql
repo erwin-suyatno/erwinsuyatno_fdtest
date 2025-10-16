@@ -34,6 +34,30 @@ CREATE TABLE books (
   thumbnail_url TEXT,
   rating SMALLINT CHECK (rating >= 1 AND rating <= 5),
   uploaded_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  is_available BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
+
+CREATE TABLE bookings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  book_id UUID REFERENCES books(id) ON DELETE CASCADE,
+  status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'RETURNED', 'OVERDUE')),
+  borrow_date DATE NOT NULL,
+  return_date DATE NOT NULL,
+  actual_return_date DATE,
+  overdue_fee DECIMAL(10,2) DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_bookings_user_id ON bookings(user_id);
+CREATE INDEX idx_bookings_book_id ON bookings(book_id);
+CREATE INDEX idx_bookings_status ON bookings(status);
+CREATE INDEX idx_bookings_borrow_date ON bookings(borrow_date);
+CREATE INDEX idx_email_verifications_user_id ON email_verifications(user_id);
+CREATE INDEX idx_password_resets_user_id ON password_resets(user_id);
+CREATE INDEX idx_books_uploaded_by ON books(uploaded_by);
+CREATE INDEX idx_books_is_available ON books(is_available);
