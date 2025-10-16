@@ -10,7 +10,9 @@
     "test:unit": "vitest run",
     "test:watch": "vitest --watch",
     "seed": "tsx prisma/seed.ts",
+    "seed:users": "tsx prisma/seed-users.ts",
     "seed:books": "tsx prisma/seed-books.ts",
+    "seed:all": "tsx prisma/seed-all.ts",
     "seed:books:reset": "tsx prisma/seed-books-reset.ts"
   },
   "keywords": [],
