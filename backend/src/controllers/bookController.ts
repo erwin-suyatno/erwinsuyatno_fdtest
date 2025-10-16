@@ -12,7 +12,7 @@ export async function create(req: Request, res: Response) {
   try {
     const book = await createBookService({
       ...req.body,
-      uploadedById: req.user?.id,
+      uploadedById: (req as any).user?.userId,
     });
     res.status(201).json({ book });
   } catch (error) {
@@ -30,6 +30,7 @@ export async function list(req: Request, res: Response) {
     const rating = typeof req.query.rating === 'string' ? parseInt(req.query.rating) : undefined;
     const search = typeof req.query.search === 'string' ? req.query.search : undefined;
     const uploadedById = typeof req.query.uploadedById === 'string' ? req.query.uploadedById : undefined;
+    const isAvailable = typeof req.query.isAvailable === 'string' ? req.query.isAvailable === 'true' : undefined;
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page) : undefined;
     const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit) : undefined;
 
@@ -38,6 +39,7 @@ export async function list(req: Request, res: Response) {
       rating,
       search,
       uploadedById,
+      isAvailable,
       page,
       limit,
     });
