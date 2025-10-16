@@ -76,19 +76,19 @@ export async function listBooks(params?: {
   limit?: number;
 }): Promise<{ books: PublicBook[]; total: number; page: number; totalPages: number }> {
   const page = params?.page || 1;
-  const limit = params?.limit || 10;
+  const limit = params?.limit || 5;
   const skip = (page - 1) * limit;
 
   const where = {
-    ...(params?.author ? { author: { contains: params.author, mode: 'insensitive' } } : {}),
+    ...(params?.author ? { author: { contains: params.author, mode: 'insensitive' as const } } : {}),
     ...(params?.rating ? { rating: params.rating } : {}),
     ...(params?.uploadedById ? { uploadedById: params.uploadedById } : {}),
     ...(params?.search
       ? {
           OR: [
-            { title: { contains: params.search, mode: 'insensitive' } },
-            { author: { contains: params.search, mode: 'insensitive' } },
-            { description: { contains: params.search, mode: 'insensitive' } },
+            { title: { contains: params.search, mode: 'insensitive' as const } },
+            { author: { contains: params.search, mode: 'insensitive' as const } },
+            { description: { contains: params.search, mode: 'insensitive' as const } },
           ],
         }
       : {}),
