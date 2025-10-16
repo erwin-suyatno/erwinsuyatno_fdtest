@@ -26,18 +26,10 @@ model User {
   EmailVerification EmailVerification[]
   PasswordReset     PasswordReset[]
   Book              Book[]
+  bookings          Booking[]
 }
 
 model EmailVerification {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  token     String
-  expiresAt DateTime
-  used      Boolean  @default(false)
-}
-
-model PasswordReset {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
@@ -55,6 +47,31 @@ model Book {
   rating      Int?
   uploadedBy  User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
   uploadedById String?
+  isAvailable Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  bookings    Booking[]
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RETURNED
+  OVERDUE
+}
+
+model Booking {
+  id               String        @id @default(uuid())
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String
+  book             Book          @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  bookId           String
+  status           BookingStatus @default(PENDING)
+  borrowDate       DateTime
+  returnDate       DateTime
+  actualReturnDate DateTime?
+  overdueFee       Decimal       @default(0) @db.Decimal(10, 2)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
