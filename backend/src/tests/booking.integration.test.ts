@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../../server';
 import { prisma } from '../utils/db';
-import jwt from 'jsonwebtoken';
+import { TestDataFactory } from './testUtils';
 
 describe('Booking Integration Tests', () => {
   let testUser: any;
@@ -11,59 +11,33 @@ describe('Booking Integration Tests', () => {
   let userToken: string;
   let adminToken: string;
 
-  beforeEach(async () => {
-    // Create test user
-    testUser = await prisma.user.create({
-      data: {
-        name: 'Test User',
-        email: 'test@example.com',
-        passwordHash: 'hashedpassword',
-        isVerified: true,
-        role: 'USER',
-      },
-    });
+  beforeAll(async () => {
+    await prisma.$connect();
+  });
 
+  beforeEach(async () => {
+    await TestDataFactory.cleanupTestData();
+    
+    // Create test user
+    testUser = await TestDataFactory.createTestUser();
+    
     // Create test admin
-    testAdmin = await prisma.user.create({
-      data: {
-        name: 'Test Admin',
-        email: 'admin@example.com',
-        passwordHash: 'hashedpassword',
-        isVerified: true,
-        role: 'ADMIN',
-      },
-    });
+    testAdmin = await TestDataFactory.createTestAdmin();
 
     // Create test book
-    testBook = await prisma.book.create({
-      data: {
-        title: 'Test Book',
-        author: 'Test Author',
-        description: 'Test Description',
-        rating: 5,
-        isAvailable: true,
-      },
-    });
+    testBook = await TestDataFactory.createTestBook(testUser.id);
 
     // Generate JWT tokens
-    userToken = jwt.sign(
-      { id: testUser.id, email: testUser.email, role: testUser.role },
-      process.env.JWT_SECRET || 'test-secret',
-      { expiresIn: '1h' }
-    );
-
-    adminToken = jwt.sign(
-      { id: testAdmin.id, email: testAdmin.email, role: testAdmin.role },
-      process.env.JWT_SECRET || 'test-secret',
-      { expiresIn: '1h' }
-    );
+    userToken = await TestDataFactory.generateAuthToken(testUser);
+    adminToken = await TestDataFactory.generateAuthToken(testAdmin);
   });
 
   afterEach(async () => {
-    // Clean up test data
-    await prisma.booking.deleteMany();
-    await prisma.book.deleteMany();
-    await prisma.user.deleteMany();
+    await TestDataFactory.cleanupTestData();
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
   });
 
   describe('POST /api/bookings', () => {
@@ -90,7 +64,7 @@ describe('Booking Integration Tests', () => {
       // Make book unavailable
       await prisma.book.update({
         where: { id: testBook.id },
-        data: { isAvailable: false },
+        data: { isAvailable: false } as any,
       });
 
       const bookingData = {
@@ -141,7 +115,7 @@ describe('Booking Integration Tests', () => {
   describe('GET /api/bookings/my', () => {
     beforeEach(async () => {
       // Create test bookings
-      await prisma.booking.create({
+      await (prisma as any).booking.create({
         data: {
           userId: testUser.id,
           bookId: testBook.id,
@@ -184,7 +158,7 @@ describe('Booking Integration Tests', () => {
   describe('GET /api/bookings', () => {
     beforeEach(async () => {
       // Create test bookings
-      await prisma.booking.create({
+      await (prisma as any).booking.create({
         data: {
           userId: testUser.id,
           bookId: testBook.id,
@@ -236,7 +210,7 @@ describe('Booking Integration Tests', () => {
     let testBooking: any;
 
     beforeEach(async () => {
-      testBooking = await prisma.booking.create({
+      testBooking = await (prisma as any).booking.create({
         data: {
           userId: testUser.id,
           bookId: testBook.id,
@@ -269,7 +243,7 @@ describe('Booking Integration Tests', () => {
     let testBooking: any;
 
     beforeEach(async () => {
-      testBooking = await prisma.booking.create({
+      testBooking = await (prisma as any).booking.create({
         data: {
           userId: testUser.id,
           bookId: testBook.id,
@@ -296,7 +270,7 @@ describe('Booking Integration Tests', () => {
         .expect(200);
 
       const book = await prisma.book.findUnique({ where: { id: testBook.id } });
-      expect(book?.isAvailable).toBe(false);
+      expect((book as any)?.isAvailable).toBe(false);
     });
 
     it('should reject request without admin token', async () => {
@@ -311,7 +285,7 @@ describe('Booking Integration Tests', () => {
     let testBooking: any;
 
     beforeEach(async () => {
-      testBooking = await prisma.booking.create({
+      testBooking = await (prisma as any).booking.create({
         data: {
           userId: testUser.id,
           bookId: testBook.id,
@@ -338,7 +312,7 @@ describe('Booking Integration Tests', () => {
         .expect(200);
 
       const book = await prisma.book.findUnique({ where: { id: testBook.id } });
-      expect(book?.isAvailable).toBe(true);
+      expect((book as any)?.isAvailable).toBe(true);
     });
   });
 
@@ -346,7 +320,7 @@ describe('Booking Integration Tests', () => {
     let testBooking: any;
 
     beforeEach(async () => {
-      testBooking = await prisma.booking.create({
+      testBooking = await (prisma as any).booking.create({
         data: {
           userId: testUser.id,
           bookId: testBook.id,
@@ -375,12 +349,12 @@ describe('Booking Integration Tests', () => {
         .send({ actualReturnDate: '2024-01-20T00:00:00Z' })
         .expect(200);
 
-      expect(response.body.booking.overdueFee).toBe(5); // 5 days overdue
+      expect(Number(response.body.booking.overdueFee)).toBe(5); // 5 days overdue
     });
 
     it('should reject return of non-approved booking', async () => {
       // Create pending booking
-      const pendingBooking = await prisma.booking.create({
+      const pendingBooking = await (prisma as any).booking.create({
         data: {
           userId: testUser.id,
           bookId: testBook.id,
@@ -403,7 +377,7 @@ describe('Booking Integration Tests', () => {
     let testBooking: any;
 
     beforeEach(async () => {
-      testBooking = await prisma.booking.create({
+      testBooking = await (prisma as any).booking.create({
         data: {
           userId: testUser.id,
           bookId: testBook.id,
@@ -420,13 +394,13 @@ describe('Booking Integration Tests', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(204);
 
-      const booking = await prisma.booking.findUnique({ where: { id: testBooking.id } });
+      const booking = await (prisma as any).booking.findUnique({ where: { id: testBooking.id } });
       expect(booking).toBeNull();
     });
 
     it('should not cancel approved booking', async () => {
       // Approve the booking first
-      await prisma.booking.update({
+      await (prisma as any).booking.update({
         where: { id: testBooking.id },
         data: { status: 'APPROVED' },
       });

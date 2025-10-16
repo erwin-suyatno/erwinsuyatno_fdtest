@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { prisma } from '../utils/db';
 import {
   createBooking,
@@ -11,45 +11,38 @@ import {
   updateBookingStatusSchema,
   returnBookingSchema,
 } from '../models/booking';
+import { TestDataFactory } from './testUtils';
 
 describe('Booking Model Unit Tests', () => {
   let testUser: any;
   let testBook: any;
 
+  beforeAll(async () => {
+    await prisma.$connect();
+  });
+
   beforeEach(async () => {
+    await TestDataFactory.cleanupTestData();
+
     // Create test user
-    testUser = await prisma.user.create({
-      data: {
-        name: 'Test User',
-        email: 'test@example.com',
-        passwordHash: 'hashedpassword',
-        isVerified: true,
-      },
-    });
+    testUser = await TestDataFactory.createTestUser();
 
     // Create test book
-    testBook = await prisma.book.create({
-      data: {
-        title: 'Test Book',
-        author: 'Test Author',
-        description: 'Test Description',
-        rating: 5,
-        isAvailable: true,
-      },
-    });
+    testBook = await TestDataFactory.createTestBook(testUser.id);
   });
 
   afterEach(async () => {
-    // Clean up test data
-    await prisma.booking.deleteMany();
-    await prisma.book.deleteMany();
-    await prisma.user.deleteMany();
+    await TestDataFactory.cleanupTestData();
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
   });
 
   describe('createBookingSchema validation', () => {
     it('should validate correct booking data', () => {
       const validData = {
-        bookId: testBook.id,
+        bookId: '123e4567-e89b-12d3-a456-426614174000', // Valid UUID format
         borrowDate: '2024-01-01T00:00:00Z',
         returnDate: '2024-01-15T00:00:00Z',
       };
@@ -71,7 +64,7 @@ describe('Booking Model Unit Tests', () => {
 
     it('should reject return date before borrow date', () => {
       const invalidData = {
-        bookId: testBook.id,
+        bookId: '123e4567-e89b-12d3-a456-426614174000', // Valid UUID format
         borrowDate: '2024-01-15T00:00:00Z',
         returnDate: '2024-01-01T00:00:00Z',
       };
@@ -83,6 +76,29 @@ describe('Booking Model Unit Tests', () => {
 
   describe('createBooking', () => {
     it('should create a booking successfully', async () => {
+      // Create test data for this test
+      const timestamp = Date.now();
+      const testUser = await prisma.user.create({
+        data: {
+          name: 'Test User',
+          email: `test-${timestamp}@example.com`,
+          passwordHash: 'hashedpassword',
+          isVerified: true,
+          role: 'USER',
+        },
+      });
+
+      const testBook = await prisma.book.create({
+        data: {
+          title: 'Test Book',
+          author: 'Test Author',
+          description: 'Test Description',
+          rating: 5,
+          isAvailable: true,
+          uploadedById: testUser.id,
+        } as any,
+      });
+
       const bookingData = {
         userId: testUser.id,
         bookId: testBook.id,
@@ -96,13 +112,35 @@ describe('Booking Model Unit Tests', () => {
       expect(booking.userId).toBe(testUser.id);
       expect(booking.bookId).toBe(testBook.id);
       expect(booking.status).toBe('PENDING');
+
+      // Cleanup
+      await (prisma as any).booking.deleteMany({ where: { userId: testUser.id } });
+      await prisma.book.delete({ where: { id: testBook.id } });
+      await prisma.user.delete({ where: { id: testUser.id } });
     });
 
     it('should throw error if book is not available', async () => {
-      // Make book unavailable
-      await prisma.book.update({
-        where: { id: testBook.id },
-        data: { isAvailable: false },
+      // Create test data for this test
+      const timestamp = Date.now();
+      const testUser = await prisma.user.create({
+        data: {
+          name: 'Test User',
+          email: `test-${timestamp}@example.com`,
+          passwordHash: 'hashedpassword',
+          isVerified: true,
+          role: 'USER',
+        },
+      });
+
+      const testBook = await prisma.book.create({
+        data: {
+          title: 'Test Book',
+          author: 'Test Author',
+          description: 'Test Description',
+          rating: 5,
+          isAvailable: false, // Make book unavailable
+          uploadedById: testUser.id,
+        } as any,
       });
 
       const bookingData = {
@@ -113,9 +151,36 @@ describe('Booking Model Unit Tests', () => {
       };
 
       await expect(createBooking(bookingData)).rejects.toThrow('Book is not available for booking');
+
+      // Cleanup
+      await prisma.book.delete({ where: { id: testBook.id } });
+      await prisma.user.delete({ where: { id: testUser.id } });
     });
 
     it('should throw error if user already has pending booking for same book', async () => {
+      // Create test data for this test
+      const timestamp = Date.now();
+      const testUser = await prisma.user.create({
+        data: {
+          name: 'Test User',
+          email: `test-${timestamp}@example.com`,
+          passwordHash: 'hashedpassword',
+          isVerified: true,
+          role: 'USER',
+        },
+      });
+
+      const testBook = await prisma.book.create({
+        data: {
+          title: 'Test Book',
+          author: 'Test Author',
+          description: 'Test Description',
+          rating: 5,
+          isAvailable: true,
+          uploadedById: testUser.id,
+        } as any,
+      });
+
       // Create first booking
       await createBooking({
         userId: testUser.id,
@@ -133,6 +198,11 @@ describe('Booking Model Unit Tests', () => {
       };
 
       await expect(createBooking(bookingData)).rejects.toThrow('You already have a pending or approved booking for this book');
+
+      // Cleanup
+      await (prisma as any).booking.deleteMany({ where: { userId: testUser.id } });
+      await prisma.book.delete({ where: { id: testBook.id } });
+      await prisma.user.delete({ where: { id: testUser.id } });
     });
   });
 
@@ -283,7 +353,7 @@ describe('Booking Model Unit Tests', () => {
         actualReturnDate: lateReturnDate.toISOString(),
       });
       
-      expect(returnedBooking?.overdueFee).toBe(5); // 5 days * $1 per day
+      expect(Number(returnedBooking?.overdueFee)).toBe(5); // 5 days * $1 per day
     });
 
     it('should throw error if trying to return non-approved booking', async () => {
