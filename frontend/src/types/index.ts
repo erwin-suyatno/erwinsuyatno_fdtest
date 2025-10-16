@@ -77,3 +77,18 @@ export interface BookingListResponse {
   page: number;
   totalPages: number;
 }
+
+export interface UserListResponse {
+  users: User[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface PublicFilters {
+  author?: string;
+  rating?: number | string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
