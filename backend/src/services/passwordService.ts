@@ -87,12 +87,25 @@ export function generateResetToken(): string {
 export async function checkRateLimit(email: string): Promise<boolean> {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
   
-  const recentRequests = await prisma.passwordReset.count({
-    where: {
-      user: { email },
-      createdAt: { gte: oneHourAgo }
-    }
+  // Get user first, then check password resets
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true }
   });
+
+  if (!user) {
+    return true; // No user found, no rate limit
+  }
+
+  // Use raw query to avoid Prisma client type issues
+  const result = await prisma.$queryRaw`
+    SELECT COUNT(*) as count 
+    FROM "PasswordReset" 
+    WHERE "userId" = ${user.id} 
+    AND "createdAt" >= ${oneHourAgo}
+  `;
+  
+  const recentRequests = Number((result as any)[0]?.count || 0);
 
   return recentRequests < 3; // Max 3 requests per hour
 }
@@ -155,16 +168,43 @@ export async function initiateForgotPassword(email: string): Promise<ForgotPassw
         'Reset Your Password',
         resetPasswordEmailTemplate(resetLink)
       );
-    } catch (emailError) {
+    } catch (emailError: any) {
       console.error('Failed to send reset email:', emailError);
-      // In development, return the token for testing
+      
+      // Handle different types of email errors
+      if (emailError.code === 'EAUTH' && emailError.message.includes('email limit')) {
+        console.log('Email service limit reached. Using development fallback.');
+        
+        // In development, return the token for testing
+        if (process.env.NODE_ENV === 'development') {
+          return {
+            success: true,
+            message: 'Reset instructions sent (check console for email content in development)',
+            resetToken: token
+          };
+        }
+        
+        // In production, suggest alternative contact methods
+        return {
+          success: false,
+          message: 'Email service temporarily unavailable. Please contact support for password reset assistance.'
+        };
+      }
+      
+      // For other email errors, use development fallback
       if (process.env.NODE_ENV === 'development') {
         return {
           success: true,
-          message: 'Reset instructions sent (check console for token in development)',
+          message: 'Reset instructions sent (check console for email content in development)',
           resetToken: token
         };
       }
+      
+      // In production, return generic error
+      return {
+        success: false,
+        message: 'Unable to send reset email. Please try again later or contact support.'
+      };
     }
 
     return {

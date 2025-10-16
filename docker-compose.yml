@@ -51,11 +51,24 @@ services:
       FRONTEND_URL: http://localhost:3000
       APP_BASE_URL: http://localhost:4000
       # SMTP Configuration (update with your email settings)
+      # Option 1: Gmail SMTP (for development)
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587
       SMTP_USER: your-email@gmail.com
       SMTP_PASS: your-app-password
       MAIL_FROM: noreply@yourdomain.com
+      
+      # Option 2: SendGrid (for production)
+      # SMTP_HOST: smtp.sendgrid.net
+      # SMTP_PORT: 587
+      # SMTP_USER: apikey
+      # SMTP_PASS: your-sendgrid-api-key
+      
+      # Option 3: Mailgun
+      # SMTP_HOST: smtp.mailgun.org
+      # SMTP_PORT: 587
+      # SMTP_USER: your-mailgun-smtp-username
+      # SMTP_PASS: your-mailgun-smtp-password
     ports:
       - "4000:4000"
     volumes:

@@ -9,7 +9,35 @@ const transporter = nodemailer.createTransport({
 
 export async function sendMail(to: string, subject: string, html: string) {
   const from = process.env.MAIL_FROM || 'no-reply@example.com';
-  return transporter.sendMail({ from, to, subject, html });
+  
+  try {
+    return await transporter.sendMail({ from, to, subject, html });
+  } catch (error: any) {
+    console.error('Email sending failed:', error.message);
+    
+    // In development, log the email content instead of failing
+    if (process.env.NODE_ENV === 'development') {
+      console.log('\n=== EMAIL CONTENT (Development Fallback) ===');
+      console.log(`To: ${to}`);
+      console.log(`Subject: ${subject}`);
+      console.log(`From: ${from}`);
+      console.log('HTML Content:');
+      console.log(html);
+      console.log('==========================================\n');
+      
+      // Return a mock success response for development
+      return {
+        messageId: `dev-${Date.now()}`,
+        accepted: [to],
+        rejected: [],
+        pending: [],
+        response: 'Email logged to console (development mode)'
+      };
+    }
+    
+    // In production, re-throw the error
+    throw error;
+  }
 }
 
 export function verificationEmailTemplate(link: string) {

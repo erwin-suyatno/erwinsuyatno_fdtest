@@ -53,10 +53,11 @@ services:
       FRONTEND_URL: http://localhost:3000
       APP_BASE_URL: http://localhost:4000
       # SMTP Configuration (update with your email settings)
-      SMTP_HOST: smtp.gmail.com
+      # Recommended for production: SendGrid, Mailgun, or AWS SES
+      SMTP_HOST: smtp.sendgrid.net
       SMTP_PORT: 587
-      SMTP_USER: your-email@gmail.com
-      SMTP_PASS: your-app-password
+      SMTP_USER: apikey
+      SMTP_PASS: your-sendgrid-api-key
       MAIL_FROM: noreply@yourdomain.com
     ports:
       - "4000:4000"
