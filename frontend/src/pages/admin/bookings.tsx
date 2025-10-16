@@ -162,11 +162,11 @@ export default function AdminBookingsPage() {
                   className="input"
                 >
                   <option value="">All Status</option>
-                  <option value="pending">⏳ Pending</option>
-                  <option value="approved">✅ Approved</option>
-                  <option value="rejected">❌ Rejected</option>
-                  <option value="returned">📚 Returned</option>
-                  <option value="overdue">⚠️ Overdue</option>
+                  <option value="PENDING">⏳ Pending</option>
+                  <option value="APPROVED">✅ Approved</option>
+                  <option value="REJECTED">❌ Rejected</option>
+                  <option value="RETURNED">📚 Returned</option>
+                  <option value="OVERDUE">⚠️ Overdue</option>
                 </select>
               </div>
               <div>
