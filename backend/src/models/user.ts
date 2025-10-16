@@ -54,21 +54,43 @@ export async function updateUser(id: string, input: UpdateUserInput): Promise<Pu
   return user;
 }
 
-export async function listUsers(params?: { isVerified?: boolean; search?: string }): Promise<PublicUser[]> {
+export async function listUsers(params?: { 
+  isVerified?: boolean; 
+  search?: string; 
+  page?: number; 
+  limit?: number; 
+}): Promise<{ users: PublicUser[]; total: number; page: number; totalPages: number }> {
+  const page = params?.page || 1;
+  const limit = params?.limit || 5;
+  const skip = (page - 1) * limit;
+
   const where = {
     ...(typeof params?.isVerified === 'boolean' ? { isVerified: params.isVerified } : {}),
     ...(params?.search
       ? {
           OR: [
-            { name: { contains: params.search, mode: 'insensitive' } },
-            { email: { contains: params.search, mode: 'insensitive' } },
+            { name: { contains: params.search, mode: 'insensitive' as const } },
+            { email: { contains: params.search, mode: 'insensitive' as const } },
           ],
         }
       : {}),
   };
-  return prisma.user.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-    select: { id: true, name: true, email: true, isVerified: true, role: true, createdAt: true, updatedAt: true },
-  });
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+      select: { id: true, name: true, email: true, isVerified: true, role: true, createdAt: true, updatedAt: true },
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    users,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  };
 }

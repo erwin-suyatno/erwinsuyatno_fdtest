@@ -1,11 +1,23 @@
 import type { Request, Response } from 'express';
-import { listUsers, updateUser } from '../models/user';
+import { listUsersService } from '../services/userService';
+import { updateUser } from '../models/user';
 
 export async function list(req: Request, res: Response) {
-  const isVerified = typeof req.query.is_verified === 'string' ? req.query.is_verified === 'true' : undefined;
-  const search = typeof req.query.search === 'string' ? req.query.search : undefined;
-  const users = await listUsers({ isVerified, search });
-  res.json({ users });
+  try {
+    const isVerified = typeof req.query.is_verified === 'string' ? req.query.is_verified === 'true' : undefined;
+    const search = typeof req.query.search === 'string' ? req.query.search : undefined;
+    const page = typeof req.query.page === 'string' ? parseInt(req.query.page) : undefined;
+    const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit) : undefined;
+
+    const result = await listUsersService({ isVerified, search, page, limit });
+    res.json(result);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 }
 
 export async function update(req: Request, res: Response) {

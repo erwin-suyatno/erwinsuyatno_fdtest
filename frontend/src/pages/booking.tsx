@@ -3,6 +3,15 @@ import { useRouter } from 'next/router';
 import { Book, Booking, CreateBookingData } from '../types';
 import { bookingService } from '../services/bookingService';
 import { useAuth } from '../middleware/auth';
+import { 
+  PageContainer, 
+  BookCard, 
+  LoadingState, 
+  ErrorState, 
+  EmptyState,
+  Modal,
+  BookingForm
+} from '../components';
 
 export default function BookingPage() {
   const [activeTab, setActiveTab] = useState<'browse' | 'my-bookings'>('browse');
@@ -171,18 +180,7 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="min-h-screen nature-bg relative overflow-hidden">
-      {/* Background Nature Elements */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-10 text-6xl animate-pulse">🌲</div>
-        <div className="absolute top-20 right-20 text-4xl animate-pulse" style={{ animationDelay: '0.5s' }}>🌿</div>
-        <div className="absolute bottom-20 left-20 text-5xl animate-pulse" style={{ animationDelay: '1s' }}>🍃</div>
-        <div className="absolute bottom-10 right-10 text-3xl animate-pulse" style={{ animationDelay: '1.5s' }}>🌱</div>
-        <div className="absolute top-1/2 left-5 text-4xl animate-pulse" style={{ animationDelay: '2s' }}>🌳</div>
-        <div className="absolute top-1/3 right-5 text-3xl animate-pulse" style={{ animationDelay: '2.5s' }}>🌾</div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+    <PageContainer>
         <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-green-100">
           {/* Header */}
           <div className="px-6 py-4 border-b border-green-200">
@@ -247,29 +245,20 @@ export default function BookingPage() {
           {/* Content */}
           <div className="p-6">
             {loading ? (
-              <div className="text-center py-12">
-                <div className="w-12 h-12 border-3 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-green-700 text-sm">🌿 Loading...</p>
-              </div>
+              <LoadingState />
             ) : error ? (
-              <div className="text-center py-12">
-                <div className="text-amber-600 text-xl mb-4">🌧️</div>
-                <p className="text-amber-600 mb-4">{error}</p>
-                <button 
-                  onClick={() => activeTab === 'browse' ? fetchAvailableBooks() : fetchMyBookings()} 
-                  className="btn btn-primary"
-                >
-                  🌱 Try Again
-                </button>
-              </div>
+              <ErrorState 
+                message={error}
+                onRetry={() => activeTab === 'browse' ? fetchAvailableBooks() : fetchMyBookings()}
+              />
             ) : activeTab === 'browse' ? (
               <>
                 {books.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-green-400 text-6xl mb-4">📚</div>
-                    <h3 className="text-lg font-medium text-green-800 mb-2">No books available</h3>
-                    <p className="text-green-600">Try searching for different books</p>
-                  </div>
+                  <EmptyState 
+                    icon="📚"
+                    title="No books available"
+                    description="Try searching for different books"
+                  />
                 ) : (
                   <>
                     <div className="mb-6">
@@ -280,51 +269,12 @@ export default function BookingPage() {
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       {books.map((book) => (
-                        <div key={book.id} className="card hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleBookClick(book)}>
-                          {book.thumbnailUrl ? (
-                            <div className="mb-4">
-                              <img
-                                src={book.thumbnailUrl}
-                                alt={book.title}
-                                className="w-full h-48 object-cover rounded-md"
-                              />
-                            </div>
-                          ) : (
-                            <div className="mb-4 h-48 bg-gradient-to-br from-green-100 to-green-200 rounded-md flex items-center justify-center">
-                              <span className="text-green-400 text-4xl">🌿</span>
-                            </div>
-                          )}
-                          
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                              {book.title}
-                            </h4>
-                            {book.rating && (
-                              <div className="flex items-center ml-2 flex-shrink-0">
-                                <span className="text-yellow-400">⭐</span>
-                                <span className="text-sm font-medium text-gray-600 ml-1">
-                                  {book.rating}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          
-                          <p className="text-sm text-gray-600 mb-2">by {book.author}</p>
-                          
-                          {book.description && (
-                            <p className="text-sm text-gray-700 mb-4 line-clamp-3">
-                              {book.description}
-                            </p>
-                          )}
-                          
-                          <div className="text-xs text-gray-500 mb-2">
-                            Added {new Date(book.createdAt).toLocaleDateString()}
-                          </div>
-                          
-                          <button className="btn btn-primary w-full">
-                            📖 Borrow This Book
-                          </button>
-                        </div>
+                        <BookCard
+                          key={book.id}
+                          book={book}
+                          onBorrow={handleBookClick}
+                          actionText="📖 Borrow This Book"
+                        />
                       ))}
                     </div>
                   </>
@@ -333,17 +283,13 @@ export default function BookingPage() {
             ) : (
               <>
                 {bookings.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-green-400 text-6xl mb-4">📋</div>
-                    <h3 className="text-lg font-medium text-green-800 mb-2">No bookings yet</h3>
-                    <p className="text-green-600">Start by browsing and borrowing some books!</p>
-                    <button
-                      onClick={() => setActiveTab('browse')}
-                      className="btn btn-primary mt-4"
-                    >
-                      🌿 Browse Books
-                    </button>
-                  </div>
+                  <EmptyState 
+                    icon="📋"
+                    title="No bookings yet"
+                    description="Start by browsing and borrowing some books!"
+                    actionText="🌿 Browse Books"
+                    onAction={() => setActiveTab('browse')}
+                  />
                 ) : (
                   <>
                     <div className="mb-6">
@@ -391,62 +337,21 @@ export default function BookingPage() {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Booking Modal */}
-      {showBookingModal && selectedBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              📖 Borrow "{selectedBook.title}"
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  📅 Borrow Date
-                </label>
-                <input
-                  type="date"
-                  value={bookingForm.borrowDate}
-                  onChange={(e) => setBookingForm(prev => ({ ...prev, borrowDate: e.target.value }))}
-                  className="input"
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  📅 Return Date
-                </label>
-                <input
-                  type="date"
-                  value={bookingForm.returnDate}
-                  onChange={(e) => setBookingForm(prev => ({ ...prev, returnDate: e.target.value }))}
-                  className="input"
-                  min={bookingForm.borrowDate}
-                />
-              </div>
-            </div>
-            
-            <div className="flex space-x-4 mt-6">
-              <button
-                onClick={() => setShowBookingModal(false)}
-                className="btn btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleBookingSubmit}
-                disabled={!bookingForm.borrowDate || !bookingForm.returnDate}
-                className="btn btn-primary flex-1"
-              >
-                📖 Borrow Book
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+        {/* Booking Modal */}
+        <Modal
+          isOpen={showBookingModal}
+          onClose={() => setShowBookingModal(false)}
+          title={`📖 Borrow "${selectedBook?.title || ''}"`}
+        >
+          {selectedBook && (
+            <BookingForm
+              book={selectedBook}
+              onSubmit={handleBookingSubmit}
+              onCancel={() => setShowBookingModal(false)}
+            />
+          )}
+        </Modal>
+      </PageContainer>
   );
 }

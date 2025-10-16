@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { apiClient } from '../lib/api/client';
 import { useAuth } from '../middleware/auth';
+import { PageContainer, LoadingState, ErrorState } from '../components';
 
 interface HomeData {
   name: string;
@@ -37,55 +38,25 @@ export default function HomePage() {
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen nature-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-3 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-green-700 text-sm">🌿 Loading your forest...</p>
-        </div>
-      </div>
+      <PageContainer>
+        <LoadingState message="🌿 Loading your forest..." />
+      </PageContainer>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen nature-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-amber-600 text-xl mb-4">🌧️</div>
-          <p className="text-amber-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="btn btn-primary"
-          >
-            🌱 Try Again
-          </button>
-        </div>
-      </div>
+      <PageContainer>
+        <ErrorState 
+          message={error}
+          onRetry={() => window.location.reload()}
+        />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="min-h-screen nature-bg relative overflow-hidden">
-      {/* Enhanced Background Nature Elements */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-10 left-10 text-8xl animate-bounce" style={{ animationDuration: '3s' }}>🌲</div>
-        <div className="absolute top-20 right-20 text-6xl animate-pulse" style={{ animationDelay: '0.5s', animationDuration: '2s' }}>🌿</div>
-        <div className="absolute bottom-20 left-20 text-7xl animate-pulse" style={{ animationDelay: '1s', animationDuration: '2.5s' }}>🍃</div>
-        <div className="absolute bottom-10 right-10 text-5xl animate-bounce" style={{ animationDelay: '1.5s', animationDuration: '4s' }}>🌱</div>
-        <div className="absolute top-1/2 left-5 text-6xl animate-pulse" style={{ animationDelay: '2s', animationDuration: '3s' }}>🌳</div>
-        <div className="absolute top-1/3 right-5 text-5xl animate-bounce" style={{ animationDelay: '2.5s', animationDuration: '3.5s' }}>🌾</div>
-        <div className="absolute top-1/4 left-1/3 text-4xl animate-pulse" style={{ animationDelay: '0.8s', animationDuration: '2.8s' }}>🌸</div>
-        <div className="absolute bottom-1/3 right-1/4 text-3xl animate-bounce" style={{ animationDelay: '1.8s', animationDuration: '3.2s' }}>🦋</div>
-      </div>
-
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-green-300 rounded-full animate-ping" style={{ animationDelay: '0s' }}></div>
-        <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-green-400 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-green-200 rounded-full animate-ping" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute bottom-1/3 right-1/4 w-1 h-1 bg-green-300 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+    <PageContainer>
         {/* Welcome Header with Gradient */}
         <div className="text-center mb-12">
           <div className="inline-block">
@@ -302,7 +273,6 @@ export default function HomePage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </PageContainer>
   );
 }

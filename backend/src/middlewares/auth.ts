@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-export interface AuthPayload { userId: string; email: string; role: string; }
+export interface AuthPayload { id: string; userId: string; email: string; role: string; }
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers.authorization;

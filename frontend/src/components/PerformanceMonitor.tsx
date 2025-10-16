@@ -23,8 +23,8 @@ export default function PerformanceMonitor({
       console.log(`🌿 ${componentName} loaded in ${loadTime.toFixed(2)}ms`);
       
       // Send to analytics if needed
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'component_load', {
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'component_load', {
           component_name: componentName,
           load_time: Math.round(loadTime),
         });
