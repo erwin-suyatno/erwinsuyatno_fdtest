@@ -8,7 +8,11 @@ beforeAll(async () => {
 
 describe('user service list filters', () => {
   it('builds query with search and isVerified', async () => {
-    const users = await listUsersService({ isVerified: false, search: 'a' });
-    expect(Array.isArray(users)).toBe(true);
+    const result = await listUsersService({ isVerified: false, search: 'a' });
+    expect(result).toHaveProperty('users');
+    expect(result).toHaveProperty('total');
+    expect(result).toHaveProperty('page');
+    expect(result).toHaveProperty('totalPages');
+    expect(Array.isArray(result.users)).toBe(true);
   });
 });
