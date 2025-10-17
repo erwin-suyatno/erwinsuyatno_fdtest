@@ -101,11 +101,11 @@ export default function MyBookingsPage() {
 
   const statusOptions = [
     { value: '', label: 'All Statuses' },
-    { value: 'pending', label: '⏳ Pending' },
-    { value: 'approved', label: '✅ Approved' },
-    { value: 'rejected', label: '❌ Rejected' },
-    { value: 'returned', label: '📚 Returned' },
-    { value: 'overdue', label: '⚠️ Overdue' },
+    { value: 'PENDING', label: '⏳ Pending' },
+    { value: 'APPROVED', label: '✅ Approved' },
+    { value: 'REJECTED', label: '❌ Rejected' },
+    { value: 'RETURNED', label: '📚 Returned' },
+    { value: 'OVERDUE', label: '⚠️ Overdue' },
   ];
 
   if (loading && bookings.length === 0) {

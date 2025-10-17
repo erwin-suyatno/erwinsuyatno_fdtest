@@ -10,15 +10,15 @@ interface BookingCardProps {
 export default function BookingCard({ booking, onReturn, onCancel, loading = false }: BookingCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
-      case 'approved':
+      case 'APPROVED':
         return 'bg-green-100 text-green-800';
-      case 'rejected':
+      case 'REJECTED':
         return 'bg-red-100 text-red-800';
-      case 'returned':
+      case 'RETURNED':
         return 'bg-blue-100 text-blue-800';
-      case 'overdue':
+      case 'OVERDUE':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -27,15 +27,15 @@ export default function BookingCard({ booking, onReturn, onCancel, loading = fal
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'PENDING':
         return '⏳';
-      case 'approved':
+      case 'APPROVED':
         return '✅';
-      case 'rejected':
+      case 'REJECTED':
         return '❌';
-      case 'returned':
+      case 'RETURNED':
         return '📚';
-      case 'overdue':
+      case 'OVERDUE':
         return '⚠️';
       default:
         return '📋';
@@ -50,8 +50,8 @@ export default function BookingCard({ booking, onReturn, onCancel, loading = fal
     });
   };
 
-  const canReturn = booking.status === 'approved';
-  const canCancel = booking.status === 'pending';
+  const canReturn = booking.status === 'APPROVED';
+  const canCancel = booking.status === 'PENDING';
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
@@ -125,13 +125,13 @@ export default function BookingCard({ booking, onReturn, onCancel, loading = fal
           </button>
         )}
 
-        {booking.status === 'rejected' && (
+        {booking.status === 'REJECTED' && (
           <div className="flex-1 text-center text-gray-500 text-sm py-2">
             This booking request was rejected
           </div>
         )}
 
-        {booking.status === 'returned' && (
+        {booking.status === 'RETURNED' && (
           <div className="flex-1 text-center text-green-600 text-sm py-2">
             ✅ Book has been returned
           </div>

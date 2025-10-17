@@ -57,7 +57,7 @@ export interface Booking {
   id: string;
   bookId: string;
   userId: string;
-  status: 'pending' | 'approved' | 'rejected' | 'returned' | 'overdue';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'RETURNED' | 'OVERDUE';
   borrowDate: string;
   returnDate: string;
   actualReturnDate?: string;
